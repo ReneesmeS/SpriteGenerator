@@ -292,6 +292,43 @@ text = "Palette:"
 size_flags_horizontal = 3
 theme = ExtResource( 4 )
 
+[node name="HBoxCustomPalette" type="HBoxContainer" parent="Settings/VBoxContainer"]
+custom_minimum_size = Vector2( 0, 68 )
+
+[node name="PaletteSourceLabel" type="Label" parent="Settings/VBoxContainer/HBoxCustomPalette"]
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.7
+theme_override_fonts/font = SubResource( 2 )
+text = "Palette source:"
+
+[node name="PaletteStatus" type="Label" parent="Settings/VBoxContainer/HBoxCustomPalette"]
+size_flags_horizontal = 3
+theme_override_fonts/font = SubResource( 2 )
+text = "Generator"
+align = 1
+
+[node name="LoadPaletteButton" type="Button" parent="Settings/VBoxContainer/HBoxCustomPalette"]
+mouse_default_cursor_shape = 2
+size_flags_horizontal = 1
+theme = ExtResource( 4 )
+text = "Load File"
+flat = true
+
+[node name="PastePaletteButton" type="Button" parent="Settings/VBoxContainer/HBoxCustomPalette"]
+mouse_default_cursor_shape = 2
+size_flags_horizontal = 1
+theme = ExtResource( 4 )
+text = "Paste"
+flat = true
+
+[node name="ClearPaletteButton" type="Button" parent="Settings/VBoxContainer/HBoxCustomPalette"]
+mouse_default_cursor_shape = 2
+size_flags_horizontal = 1
+theme = ExtResource( 4 )
+text = "Clear"
+disabled = true
+flat = true
+
 [node name="HBoxHue" type="HBoxContainer" parent="Settings/VBoxContainer"]
 
 [node name="Label" type="Label" parent="Settings/VBoxContainer/HBoxHue"]
@@ -457,6 +494,24 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
+[node name="PaletteFileDialog" type="FileDialog" parent="."]
+title = "Select Palette File"
+size = Vector2i( 800, 600 )
+use_native_dialog = true
+
+[node name="PalettePasteDialog" type="AcceptDialog" parent="."]
+title = "Paste Palette Colors"
+size = Vector2i( 640, 480 )
+
+[node name="PaletteText" type="TextEdit" parent="PalettePasteDialog"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+wrap_mode = 2
+
 [node name="SubViewport" type="SubViewport" parent="."]
 size = Vector2( 130, 130 )
 own_world = true
@@ -486,5 +541,10 @@ texture = SubResource( 6 )
 [connection signal="value_changed" from="Settings/VBoxContainer/HBoxFrames/FrameCount" to="." method="_on_FrameCount_value_changed"]
 [connection signal="drag_ended" from="Settings/VBoxContainer/VBoxContainer/SymmetrySlider" to="." method="_on_HSlider_drag_ended"]
 [connection signal="value_changed" from="Settings/VBoxContainer/VBoxContainer/SymmetrySlider" to="." method="_on_HSlider_value_changed"]
+[connection signal="pressed" from="Settings/VBoxContainer/HBoxCustomPalette/LoadPaletteButton" to="." method="_on_LoadPaletteButton_pressed"]
+[connection signal="pressed" from="Settings/VBoxContainer/HBoxCustomPalette/PastePaletteButton" to="." method="_on_PastePaletteButton_pressed"]
+[connection signal="pressed" from="Settings/VBoxContainer/HBoxCustomPalette/ClearPaletteButton" to="." method="_on_ClearPaletteButton_pressed"]
 [connection signal="pressed" from="Settings/ExportButton" to="." method="_on_ExportButton_pressed"]
 [connection signal="pressed" from="Settings/ExportSpriteSheet" to="." method="_on_ExportSpriteSheet_pressed"]
+[connection signal="file_selected" from="PaletteFileDialog" to="." method="_on_PaletteFileDialog_file_selected"]
+[connection signal="confirmed" from="PalettePasteDialog" to="." method="_on_PalettePasteDialog_confirmed"]

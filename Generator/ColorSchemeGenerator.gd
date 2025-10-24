@@ -13,6 +13,11 @@ func generate_new_colorscheme(n_colors, settings := {}):
 	else:
 		rng.randomize()
 
+	if settings.has("custom_palette"):
+		var custom = _build_custom_palette(settings.custom_palette, n_colors)
+		if custom.size() > 0:
+			return custom
+
 	var mode = _resolve_mode(settings.get("mode", PaletteMode.RANDOM))
 	var hue_shift = settings.get("hue_shift", 0.0)
 	var saturation_scale = settings.get("saturation", 1.0)
@@ -155,6 +160,21 @@ func _resolve_mode(mode):
 			_:
 				return PaletteMode.RANDOM
 	return int(mode)
+
+func _build_custom_palette(source, count) -> PackedColorArray:
+	var base := PackedColorArray()
+	if source is PackedColorArray:
+		base = source
+	elif source is Array:
+		for item in source:
+			if item is Color:
+				base.append(item)
+	if base.is_empty():
+		return PackedColorArray()
+	var result := PackedColorArray()
+	for i in range(count):
+		result.append(base[i % base.size()])
+	return result
 
 #func generate_new_colorscheme(n_colors):
 #	return _colorscheme_triadic(n_colors)

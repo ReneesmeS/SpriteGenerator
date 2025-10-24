@@ -6,8 +6,9 @@ Enhanced Godot 4 pixel-sprite generator derived from the original MIT-licensed p
 
 - **Procedural sprites** driven by cellular automata with symmetry controls and adjustable map size.
 - **Rich palette customization** – choose from warm/cool/pastel/monochrome presets, tweak hue shift, saturation, and brightness, and lock palettes to seeds for reproducible looks.
+- **Custom palettes** – load a palette file or paste hex codes/CSV/GIMP `.gpl` rows to drive sprite colors directly.
 - **One-click exports** – grab a single PNG or generate a sprite strip with multiple animation phases.
-- **Responsive interface** that centers the preview and scales cleanly on large monitors.
+- **Responsive interface** that centers the preview, scales on large monitors, and auto-stacks the settings panel on narrow windows.
 - **HTML5-ready downloads** thanks to the bundled `HTML5FileExchange` plugin.
 
 ## 🚀 Getting started
@@ -38,19 +39,33 @@ Enhanced Godot 4 pixel-sprite generator derived from the original MIT-licensed p
 
 - **Colors**: number of distinct colors used in the scheme.
 - **Palette**: select base mood (Random/Warm/Cool/Pastel/Monochrome).
+- **Palette source**: view whether you're using the procedural generator or a custom upload; access **Load File**, **Paste**, or **Clear** controls.
 - **Hue Shift**: adjust hue in degrees.
 - **Saturation / Brightness**: fine-tune intensity/values (percent sliders).
 - **Seed linked**: lock palette generation to the current sprite seed for consistent results.
+
+### Importing a custom palette
+
+You can override the procedural palette at any time:
+
+1. Click **Load File** to choose a palette document (`.pal`, `.txt`, `.json`, `.gpl`, `.hex`). The parser accepts:
+   - Hex colors with or without the `#` prefix (`#ff7700`, `ff7700ff`).
+   - Comma/space separated RGB(A) values (`255,120,64`, `0.4 0.8 0.2 1`).
+   - GIMP palette (`.gpl`) rows (`255 0 0 Red`).
+2. Or click **Paste** to drop raw text (one color per line, comma, or space).
+3. Press **Clear** to return to the generator controls. While a custom palette is active the mood/hue/saturation sliders are disabled so your uploaded colors stay untouched.
+
+> **Note:** In the HTML5 export, browser sandboxes prevent direct file access, so use **Paste** to bring in palettes.
 
 ### Exporting for Web
 
 1. Install Godot web export templates (`Editor → Manage Export Templates`).
 2. Add a **Web** preset in `Project → Export`, keeping the default HTML shell.
-3. Export – Godot will produce an `index.html`, `.wasm`, and `.pck` in your chosen folder.
+3. Export – Godot will produce an `index.html`, `.wasm`, and `.pck`. A common pattern is `build/web/index.html`, which keeps generated bundles out of version control.
 4. Serve locally for testing:
 
    ```bash
-   cd export/web
+   cd build/web
    python3 -m http.server 8080
    ```
 
@@ -68,7 +83,18 @@ Generator/       # Core generation scripts (maps, colors, grouping, etc.)
 GUI/             # UI scene, theme, textures, and controls
 addons/          # HTML5 file exchange plugin for web downloads
 export_presets/  # (Optional) export configuration files
+build/           # (Ignored) optional folder for exported builds
 ```
+
+## 🛠️ Troubleshooting
+
+- **`godot4` command not found on macOS** – Godot’s GUI bundle isn’t on the system `PATH` by default. Either launch the editor directly from `/Applications`, or expose the CLI with a symlink:
+
+   ```bash
+   sudo ln -s /Applications/Godot.app/Contents/MacOS/Godot /usr/local/bin/godot4
+   ```
+
+   Adjust the path if you keep the app elsewhere (e.g., inside `~/Applications`). Once the link exists you can run `godot4 --version` or export from the terminal.
 
 ## 📝 License & attribution
 
