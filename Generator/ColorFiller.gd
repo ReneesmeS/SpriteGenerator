@@ -4,17 +4,17 @@ var noise
 var noise2
 
 func _init():
-	noise = OpenSimplexNoise.new()
-	noise2 = OpenSimplexNoise.new()
-	noise2.octaves = 3
-	noise2.period = 40.0
-	noise2.persistence = 0.4
-	noise2.lacunarity = 3.0
+	noise = FastNoiseLite.new()
+	noise2 = FastNoiseLite.new()
+	noise2.fractal_octaves = 3
+	noise2.frequency = 1.0 / 40.0
+	noise2.fractal_gain = 0.4
+	noise2.fractal_lacunarity = 3.0
 	
-	noise.octaves = 5
-	noise.period = 30.0
-	noise.persistence = 0.4
-	noise.lacunarity = 3.0
+	noise.fractal_octaves = 5
+	noise.frequency = 1.0 / 30.0
+	noise.fractal_gain = 0.4
+	noise.fractal_lacunarity = 3.0
 
 func fill_colors(map, colorscheme, eye_colorscheme, n_colors, outline = true):
 	noise.seed = randi()

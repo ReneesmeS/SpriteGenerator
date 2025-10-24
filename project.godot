@@ -6,17 +6,13 @@
 ;   [section] ; section goes between []
 ;   param=value ; assign values to parameters
 
-config_version=4
-
-_global_script_classes=[  ]
-_global_script_class_icons={
-
-}
+config_version=5
 
 [application]
 
 config/name="SpriteGenerator"
 run/main_scene="res://GUI/GUI.tscn"
+config/features=PackedStringArray("4.5")
 config/icon="res://icon.png"
 
 [autoload]
@@ -25,12 +21,13 @@ HTML5File="*res://addons/HTML5FileExchange/HTML5FileExchange.gd"
 
 [display]
 
+window/size/viewport_width=1150
+window/size/viewport_height=700
 window/stretch/mode="2d"
-window/stretch/aspect="keep"
 
 [editor_plugins]
 
-enabled=PoolStringArray(  )
+enabled=PackedStringArray()
 
 [importer_defaults]
 
@@ -61,4 +58,4 @@ common/enable_pause_aware_picking=true
 
 [rendering]
 
-environment/default_environment="res://default_env.tres"
+environment/defaults/default_environment="res://default_env.tres"

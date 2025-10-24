@@ -7,14 +7,17 @@ var lifetime = 0
 var is_eye = false
 var amplitude = 0
 var movement = true
+var base_phase = 0.0
 
 func _ready():
 	amplitude = (lifetime % 5 + 2) * 5.0
+	base_phase = lifetime
+	set_animation_phase(0.0)
 
 func set_cells(c):
 	cells = c
 
-	update()
+	queue_redraw()
 
 func _draw():
 	var average = Vector2()
@@ -34,14 +37,24 @@ func _draw():
 		if is_eye && average.distance_to(c.position) < eye_cutoff:
 			draw_rect(Rect2(c.position.x*draw_size, c.position.y*draw_size, draw_size, draw_size), c.color.darkened(0.85))
 
-func set_speed(s):
+func set_velocity(s):
 	speed = s
 
 func _process(delta):
 	if movement:
 		lifetime += delta * 4.0
-		position.y = sin(lifetime) * 20
+		set_animation_phase(lifetime)
+
+func set_animation_phase(phase):
+	position.y = sin(phase + base_phase) * amplitude
+
+func set_movement_enabled(enabled):
+	movement = enabled
+	if !movement:
+		set_animation_phase(0.0)
+	else:
+		set_animation_phase(lifetime)
 
 func set_eye():
 	is_eye = true
-	update()
+	queue_redraw()

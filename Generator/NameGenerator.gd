@@ -4,7 +4,7 @@ var materials = ["Bone", "Snow", "Boxwood", "Graphite", "Stone", "Wooden", "Wate
 var foods = ["Beet", "Broccoli", "Celery", "Fish", "Cabbage", "Corn", "Dandelion", "Vanilla", "Chocolate", "Lemon", "Coconut", "Strawberry", "Fiddlehead", "Grape", "Cheese", "Cake", "Zucchini", "Lettuce", "Spinach", "Salt", "Turnip", "Banana", "Cucumber", "Pumpkin", "Squash", "Tomato", "Pepper", "Artichoke", "Sunflower", "Asparagus", "Onion", "Shallot", "Meat", "Herb", "Tofu", "Bread", "Rice", "Carrot", "Mushroom", "Bun", "Milk", "Cereal", "Dumpling", "Sushi", "Spaghetti", "Meatball", "Apple Pie", "Dave"]
 var flavors = ["Sweet", "Sour", "Spicy", "Hot", "Salty", "Bitter",  "Disgusting", "Cheesy"]
 var sizes = ["Big", "Small", "Tiny", "Huge", "Massive", "Short", "Grand"]
-var properties = ["Colorful", "Destructive", "Mysterious", "Healing", "Chaotic", "Floating", "Heavy", "Deep", "Hateful", "Unique", "Heavenly", "Radioactive", "Toxic", "Burning", "Freezing", "Beautiful", "Ugly", "Cold", "Great", "Terrible", "Light", "Dark"]
+var properties = ["Colorful", "Destructive", "Mysterious", "Healing", "Chaotic", "Floating", "Heavy", "Deep", "Hateful", "Unique", "Heavenly", "Radioactive", "Toxic", "Burning", "Freezing", "Beautiful", "Ugly", "Cold", "Great", "Terrible", "Light3D", "Dark"]
 var colors = ["Red", "Green", "Blue", "Yellow", "Orange", "Pink", "Purple", "Cyan", "Magenta", "Black", "White", "Gray"]
 var ages = ["Old", "Fresh", "Crusty", "New", "Ancient", "Broken", "Fossilized", "Crisp", "Aged", "Fermented"]
 var things = ["Feather", "Sandals", "Gem", "Orb", "Dust", "Book", "Amulet", "Heart", "Finger", "Pencil", "Weapon", "Vitamins", "Calculator", "Cloud", "Overlord", "Bottle", "Branch", "Bag", "Alien", "Fire", "Fork", "Sculpture", "Soul", "Toothbrush" ]
@@ -13,7 +13,7 @@ var other = ["Destruction", "Chaos", "Equality", "Electricity", "Speed", "Mutati
 enum text_add {materials, foods, flavors, sizes, properties, colors, ages}
 var can_add = [text_add.materials,text_add.foods,text_add.flavors,text_add.sizes,text_add.properties,text_add.ages]
 
-func get_name():
+func generate_name():
 	var name_string = ""
 
 	var has_added = []
@@ -37,21 +37,6 @@ func get_name():
 	if has_added.has(text_add.materials):
 		name_string += _rand_from_array(materials) + " "
 	
-	
-	
-#	if _rand_chance(0.2 ):
-#		name_string += _rand_from_array(sizes) + " "
-#	if _rand_chance(0.2):
-#		name_string += _rand_from_array(ages) + " "
-#	if _rand_chance(0.2):
-#		name_string += _rand_from_array(colors) + " "
-#	if _rand_chance(0.2):
-#		name_string += _rand_from_array(properties) + " "
-#	if _rand_chance(0.2):
-#		name_string += _rand_from_array(materials) + " "
-#	if _rand_chance(0.2):
-#		name_string += _rand_from_array(flavors) + " "
-	
 	if _rand_chance(0.2):
 		name_string += _rand_from_array(things) + " "
 		name_string += "of "
@@ -65,7 +50,7 @@ func get_name():
 	return name_string
 	
 func _rand_chance(chance):
-	return rand_range(0.0, 1.0) < chance
+	return randf_range(0.0, 1.0) < chance
 
 func _rand_from_array(arr):
 	return arr[randi() % arr.size()]

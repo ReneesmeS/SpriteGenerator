@@ -4,7 +4,7 @@ var groups = []
 var negative_groups = []
 var draw_size = 10
 var movement = true
-onready var cell_drawer = preload("res://Generator/CellDrawer.tscn")
+@onready var cell_drawer = preload("res://Generator/CellDrawer.tscn")
 
 func _ready():
 	var largest = 0
@@ -15,10 +15,10 @@ func _ready():
 		var g = groups[i].arr
 		groups[i]["start_time"] = g.size() + groups.size()
 		if g.size() >= largest * 0.25:
-			var cell = cell_drawer.instance()
+			var cell = cell_drawer.instantiate()
 			cell.set_cells(g)
 			cell.lifetime = groups[i].start_time
-			cell.movement = movement
+			cell.set_movement_enabled(movement)
 			
 			add_child(cell)
 		else:
@@ -36,11 +36,11 @@ func _ready():
 						g["start_time"] = g2["start_time"]
 						
 			if touching:
-				var cell = cell_drawer.instance()
+				var cell = cell_drawer.instantiate()
 				cell.set_cells(g.arr)
 
 				cell.lifetime = g.start_time
-				cell.movement = movement
+				cell.set_movement_enabled(movement)
 				add_child(cell)
 
 				if (g.arr.size() + negative_groups.size()) % 5 >= 3:
@@ -50,7 +50,18 @@ func _ready():
 		c.draw_size = draw_size
 
 func disable_movement():
-	movement = false
+	set_movement(false)
+
+func set_movement(enabled):
+	movement = enabled
+	for c in get_children():
+		if c.has_method("set_movement_enabled"):
+			c.set_movement_enabled(enabled)
+
+func set_animation_phase(phase):
+	for c in get_children():
+		if c.has_method("set_animation_phase"):
+			c.set_animation_phase(phase)
 
 func group_is_touching_group(g1, g2):
 	for c in g1:

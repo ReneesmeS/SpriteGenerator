@@ -3,17 +3,23 @@ extends Node
 signal InFocus
 
 func _ready():
-	if OS.get_name() == "HTML5" and OS.has_feature('JavaScript'):
+	if _is_web_platform() and _has_js_bridge():
 		_define_js()
 
 
 func _notification(notification:int) -> void:
-	if notification == MainLoop.NOTIFICATION_WM_FOCUS_IN:
+	if notification == MainLoop.NOTIFICATION_APPLICATION_FOCUS_IN:
 		emit_signal("InFocus")
+
+func _is_web_platform() -> bool:
+	return OS.get_name() in ["HTML5", "Web"]
+
+func _has_js_bridge() -> bool:
+	return Engine.has_singleton("JavaScriptBridge")
 
 func _define_js()->void:
 	#Define JS script
-	JavaScript.eval("""
+	JavaScriptBridge.eval("""
 	var fileData;
 	var fileType;
 	var fileName;
@@ -51,19 +57,19 @@ func _define_js()->void:
 	
 	
 func load_image()->Image:
-	if OS.get_name() != "HTML5" or !OS.has_feature('JavaScript'):
+	if !_is_web_platform() or !_has_js_bridge():
 		return
 		
 	#Execute js function
-	JavaScript.eval("upload();", true)	#opens promt for choosing file
+	JavaScriptBridge.eval("upload();", true)	#opens promt for choosing file
 	
 	#label.text = "Wait for focus"
-	yield(self, "InFocus")	#wait until js promt is closed
+	await self.InFocus	#wait until js promt is closed
 	
 	#label.text = "Timer on for loading"
-	yield(get_tree().create_timer(0.1), "timeout")	#give some time for async js data load
+	await get_tree().create_timer(0.1).timeout	#give some time for async js data load
 	
-	if JavaScript.eval("canceled;", true):	# if File Dialog closed w/o file
+	if JavaScriptBridge.eval("canceled;", true):	# if File Dialog closed w/o file
 		#label.text = "Canceled prompt"
 		return
 	
@@ -71,14 +77,14 @@ func load_image()->Image:
 	#label.text = "Load image"
 	var imageData
 	while true:
-		imageData = JavaScript.eval("fileData;", true)
+		imageData = JavaScriptBridge.eval("fileData;", true)
 		if imageData != null:
 			break
 		#label.text = "No image yet"
-		yield(get_tree().create_timer(1.0), "timeout")	#need more time to load data
+		await get_tree().create_timer(1.0).timeout	#need more time to load data
 	
-	var imageType = JavaScript.eval("fileType;", true)
-	var imageName = JavaScript.eval("fileName;", true)
+	var imageType = JavaScriptBridge.eval("fileType;", true)
+	var imageName = JavaScriptBridge.eval("fileName;", true)
 	
 	var image = Image.new()
 	var image_error
@@ -99,8 +105,8 @@ func load_image()->Image:
 		return image
 		# Display texture
 		var tex = ImageTexture.new()
-		tex.create_from_image(image, 0) # Flag = 0 or else export is fucked!
-		Sprite.texture = tex
+		tex.create_from_image(image) #,0 # Flag = 0 or else export is fucked!
+		Sprite2D.texture = tex
 		#loadedImage = image # Keep Image for later, just in case...
 		#loadedImageName = imageName
 		#label.text = "Image %s loaded as %s." % [imageName, imageType]
@@ -109,20 +115,26 @@ func load_image()->Image:
 
 
 func save_image(image:Image, fileName:String = "export")->void:
-	if OS.get_name() != "HTML5" or !OS.has_feature('JavaScript'):
+	if !_is_web_platform() or !_has_js_bridge():
 		return
 		
 	image.clear_mipmaps()
 	if image.save_png("user://export_temp.png"):
 		#label.text = "Error saving temp file"
 		return
-	var file:File = File.new()
-	if file.open("user://export_temp.png", File.READ):
+	var file = FileAccess.open("user://export_temp.png", FileAccess.READ)
+	if file == null:
 		#label.text = "Error opening file"
 		return
-	var pngData = Array(file.get_buffer(file.get_len()))	#read data as PoolByteArray and convert it to Array for JS
+	var pngData = file.get_buffer(file.get_length())	# PackedByteArray for JS
 	file.close()
-	var dir = Directory.new()
-	dir.remove("user://export_temp.png")
-	JavaScript.eval("download('%s', %s);" % [fileName, str(pngData)], true)
+	DirAccess.remove_absolute("user://export_temp.png")
+	JavaScriptBridge.eval("download('%s', %s);" % [fileName, _byte_array_to_js(pngData)], true)
 	#label.text = "Saving DONE"
+
+func _byte_array_to_js(bytes:PackedByteArray) -> String:
+	var parts := PackedStringArray()
+	parts.resize(bytes.size())
+	for i in bytes.size():
+		parts[i] = str(bytes[i])
+	return "[" + ",".join(parts) + "]"
