@@ -8,6 +8,7 @@ var is_eye = false
 var amplitude = 0
 var movement = true
 var base_phase = 0.0
+var amplitude_multiplier = 0.5
 
 func _ready():
 	amplitude = (lifetime % 5 + 2) * 5.0
@@ -46,7 +47,7 @@ func _process(delta):
 		set_animation_phase(lifetime)
 
 func set_animation_phase(phase):
-	position.y = sin(phase + base_phase) * amplitude
+	position.y = sin(phase + base_phase) * amplitude * amplitude_multiplier
 
 func set_movement_enabled(enabled):
 	movement = enabled
@@ -54,6 +55,13 @@ func set_movement_enabled(enabled):
 		set_animation_phase(0.0)
 	else:
 		set_animation_phase(lifetime)
+
+func set_amplitude_multiplier(mult):
+	amplitude_multiplier = mult
+	if movement:
+		set_animation_phase(lifetime)
+	else:
+		set_animation_phase(0.0)
 
 func set_eye():
 	is_eye = true

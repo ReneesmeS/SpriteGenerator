@@ -4,6 +4,7 @@ var groups = []
 var negative_groups = []
 var draw_size = 10
 var movement = true
+var amplitude_multiplier = 0.5
 @onready var cell_drawer = preload("res://Generator/CellDrawer.tscn")
 
 func _ready():
@@ -19,6 +20,7 @@ func _ready():
 			cell.set_cells(g)
 			cell.lifetime = groups[i].start_time
 			cell.set_movement_enabled(movement)
+			cell.set_amplitude_multiplier(amplitude_multiplier)
 			
 			add_child(cell)
 		else:
@@ -41,6 +43,7 @@ func _ready():
 
 				cell.lifetime = g.start_time
 				cell.set_movement_enabled(movement)
+				cell.set_amplitude_multiplier(amplitude_multiplier)
 				add_child(cell)
 
 				if (g.arr.size() + negative_groups.size()) % 5 >= 3:
@@ -48,6 +51,8 @@ func _ready():
 	
 	for c in get_children():
 		c.draw_size = draw_size
+		if c.has_method("set_amplitude_multiplier"):
+			c.set_amplitude_multiplier(amplitude_multiplier)
 
 func disable_movement():
 	set_movement(false)
@@ -62,6 +67,12 @@ func set_animation_phase(phase):
 	for c in get_children():
 		if c.has_method("set_animation_phase"):
 			c.set_animation_phase(phase)
+
+func set_amplitude_multiplier(mult):
+	amplitude_multiplier = mult
+	for c in get_children():
+		if c.has_method("set_amplitude_multiplier"):
+			c.set_amplitude_multiplier(mult)
 
 func group_is_touching_group(g1, g2):
 	for c in g1:

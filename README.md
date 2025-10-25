@@ -99,6 +99,8 @@ build/           # (Ignored) optional folder for exported builds
 ## 📝 License & attribution
 
 - Original code & assets © Deep-Fold, released under the MIT License (see `LICENSE`).
-- Add your name/company to commits or README if you distribute custom builds.
+- Modifications and enhancements © 2025 Khaki Kharmeleon.
+
+This fork adds responsive UI scaling, improved export stability (centered single PNG and uncropped sprite sheets), palette workflow upgrades, and HTML5 download quality-of-life improvements.
 
 Enjoy generating endless sprites! Feel free to open issues or PRs with new palette ideas or export workflows.

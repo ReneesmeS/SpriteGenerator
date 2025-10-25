@@ -49,7 +49,25 @@ const MIN_SETTINGS_WIDTH = 360.0
 const MAX_SETTINGS_WIDTH = 640.0
 const PREVIEW_PADDING = Vector2(160.0, 220.0)
 const DEFAULT_MAX_COLOR_COUNT = 32
+const BASE_VIEWPORT = Vector2(1280.0, 720.0)
+const MIN_UI_SCALE = 0.75
+const MAX_UI_SCALE = 1.75
+const MAX_ANIM_VERTICAL_AMPLITUDE_PIXELS = 30.0 # matches CellDrawer max amplitude
+const FONT_BASELINES := {
+	"Label": {"size": 54, "outline": 4},
+	"Button": {"size": 54, "outline": 4},
+	"OptionButton": {"size": 52, "outline": 4},
+	"CheckBox": {"size": 52, "outline": 4},
+	"LineEdit": {"size": 50, "outline": 3},
+	"SpinBox": {"size": 50, "outline": 3}
+}
+const NAME_LABEL_BASELINE := {"size": 80, "outline": 6}
+const SPRITESHEET_WOBBLE_SCALE = 0.15
 var custom_palette: PackedColorArray = PackedColorArray()
+var ui_scale := -1.0
+var _scaled_controls: Array = []
+var _name_label_base_size := 0
+var _name_label_base_outline := 0
 
 func _process(delta):
 	lifetime += delta * 0.07
@@ -57,14 +75,16 @@ func _process(delta):
 
 func _ready():
 	seed_list.append(_get_next_seed())
+	_initialize_ui_scaling()
+	_configure_navigation_buttons()
 	_setup_palette_controls()
 	_reset_layout_presets()
 	_configure_palette_inputs()
 	_refresh_palette_status()
 	call_deferred("_update_layout")
 	if left_button:
-		left_button.visible = true
 		left_button.disabled = true
+		left_button.modulate = Color(1, 1, 1, 0.55)
 	_redraw()
 
 func _input(event):
@@ -78,6 +98,7 @@ func _shift_seeds(shift):
 	seed_index = max(seed_index, 0)
 	if left_button:
 		left_button.disabled = (seed_index == 0)
+		left_button.modulate = Color(1, 1, 1, 0.55) if seed_index == 0 else Color(1, 1, 1, 1)
 		
 
 	if seed_index >= seed_list.size():
@@ -91,6 +112,7 @@ func _redraw():
 	var gd = _get_group_drawer(false)
 	
 	sprite_holder.add_child(gd)
+	gd.set_amplitude_multiplier(1.0)
 	_update_sprite_holder_layout()
 	name_label.text = name_generator.generate_name()
 	#$SpriteBorder/RichTextLabel.bbcode_text = "[rainbow][center][shake rate=20.0 level=25]"+name_generator.generate_name()+"[/shake][/center][/rainbow]"
@@ -156,6 +178,18 @@ func _configure_palette_inputs():
 		if ok_button:
 			ok_button.text = "Apply"
 		palette_paste_dialog.dialog_hide_on_ok = false
+
+func _configure_navigation_buttons():
+	if right_button:
+		right_button.focus_mode = Control.FOCUS_NONE
+		if right_button.texture_disabled == null:
+			right_button.texture_disabled = right_button.texture_normal
+	if left_button:
+		left_button.focus_mode = Control.FOCUS_NONE
+		left_button.flip_h = true
+		left_button.scale = Vector2.ONE
+		if left_button.texture_disabled == null:
+			left_button.texture_disabled = left_button.texture_normal
 
 func _refresh_palette_status(message := ""):
 	var has_custom = custom_palette.size() > 0
@@ -359,9 +393,15 @@ func _update_layout():
 	var total_size = get_rect().size
 	if total_size == Vector2.ZERO:
 		total_size = Vector2(1280, 720)
+	var target_scale = _calculate_ui_scale(total_size)
+	_apply_ui_scale(target_scale)
 	var margin = LAYOUT_MARGIN
+	margin *= ui_scale
 	var horizontal_available = total_size.x - margin * 3
-	var min_horizontal_needed = MIN_SETTINGS_WIDTH + 320.0
+	var min_settings_width = MIN_SETTINGS_WIDTH * ui_scale
+	var max_settings_width = MAX_SETTINGS_WIDTH * ui_scale
+	var min_sprite_dimension = 320.0 * ui_scale
+	var min_horizontal_needed = min_settings_width + min_sprite_dimension
 	var use_vertical = horizontal_available < min_horizontal_needed
 
 	var sprite_width: float
@@ -372,19 +412,19 @@ func _update_layout():
 	var settings_pos: Vector2
 
 	if use_vertical:
-		sprite_width = max(total_size.x - margin * 2, 240.0)
-		sprite_height = max((total_size.y - margin * 3) * 0.55, 320.0)
-		sprite_height = min(sprite_height, total_size.y - margin * 3 - 240.0)
-		sprite_height = max(sprite_height, 240.0)
+		sprite_width = max(total_size.x - margin * 2, min_sprite_dimension * 0.75)
+		sprite_height = max((total_size.y - margin * 3) * 0.55, min_sprite_dimension)
+		sprite_height = min(sprite_height, total_size.y - margin * 3 - min_sprite_dimension * 0.75)
+		sprite_height = max(sprite_height, min_sprite_dimension)
 		settings_width = sprite_width
-		settings_height = max(total_size.y - sprite_height - margin * 3, 260.0)
+		settings_height = max(total_size.y - sprite_height - margin * 3, 260.0 * ui_scale)
 		settings_pos = Vector2(margin, sprite_pos.y + sprite_height + margin)
 	else:
-		settings_width = clamp(total_size.x * 0.36, MIN_SETTINGS_WIDTH, MAX_SETTINGS_WIDTH)
-		settings_width = min(settings_width, horizontal_available - 320.0)
-		settings_width = max(settings_width, MIN_SETTINGS_WIDTH)
-		sprite_width = max(horizontal_available - settings_width, 320.0)
-		sprite_height = max(total_size.y - margin * 2, 320.0)
+		settings_width = clamp(total_size.x * 0.36, min_settings_width, max_settings_width)
+		settings_width = min(settings_width, horizontal_available - min_sprite_dimension)
+		settings_width = max(settings_width, min_settings_width)
+		sprite_width = max(horizontal_available - settings_width, min_sprite_dimension)
+		sprite_height = max(total_size.y - margin * 2, min_sprite_dimension)
 		settings_height = sprite_height
 		settings_pos = Vector2(sprite_pos.x + sprite_width + margin, margin)
 
@@ -403,16 +443,16 @@ func _update_layout():
 	if right_button and left_button:
 		if use_vertical:
 			var arrow_y = sprite_pos.y + sprite_height + margin * 0.25
-			var gap = 24.0
+			var gap = 24.0 * ui_scale
 			var total_arrow_width = left_size.x + gap + right_size.x
 			var start_x = sprite_pos.x + sprite_width * 0.5 - total_arrow_width * 0.5
 			left_button.position = Vector2(start_x, arrow_y)
 			right_button.position = Vector2(start_x + left_size.x + gap, arrow_y)
 		else:
 			var button_y = sprite_pos.y + sprite_height * 0.5
-			var right_x = sprite_pos.x + sprite_width + 12.0
+			var right_x = sprite_pos.x + sprite_width + 12.0 * ui_scale
 			right_button.position = Vector2(right_x, button_y - right_size.y * 0.5)
-			var left_x = sprite_pos.x - left_size.x - 12.0
+			var left_x = sprite_pos.x - left_size.x - 12.0 * ui_scale
 			left_button.position = Vector2(left_x, button_y - left_size.y * 0.5)
 	if left_button:
 		left_button.visible = true
@@ -442,9 +482,10 @@ func _get_preview_rect_size():
 	var base_size = sprite_border.size
 	if base_size == Vector2.ZERO:
 		base_size = Vector2(640.0, 720.0)
-	var preview = base_size - PREVIEW_PADDING
-	preview.x = max(preview.x, 128.0)
-	preview.y = max(preview.y, 128.0)
+	var padding_scale = clamp(ui_scale, 0.6, 1.6)
+	var preview = base_size - (PREVIEW_PADDING * padding_scale)
+	preview.x = max(preview.x, 128.0 * padding_scale)
+	preview.y = max(preview.y, 128.0 * padding_scale)
 	return preview
 
 func _get_button_visual_size(button):
@@ -458,7 +499,89 @@ func _get_button_visual_size(button):
 				btn_size = tex.get_size()
 	if btn_size == Vector2.ZERO:
 		btn_size = button.get_combined_minimum_size()
+	var btn_scale = button.scale
+	btn_size.x *= abs(btn_scale.x)
+	btn_size.y *= abs(btn_scale.y)
 	return btn_size
+
+func _register_scaled_control(control: Control) -> void:
+	if control == null:
+		return
+	for entry in _scaled_controls:
+		if entry.get("node", null) == control:
+			return
+	var base_size = control.get_theme_font_size("font")
+	# Avoid reserved keyword 'class_name' (used at top-level in GDScript)
+	var control_class_name := str(control.get_class())
+	if base_size <= 0:
+		if FONT_BASELINES.has(control_class_name):
+			var baseline_dict: Dictionary = FONT_BASELINES[control_class_name]
+			base_size = int(baseline_dict.get("size", 54))
+		else:
+			base_size = 54
+	var base_outline = 0
+	if FONT_BASELINES.has(control_class_name):
+		var outline_dict: Dictionary = FONT_BASELINES[control_class_name]
+		base_outline = int(outline_dict.get("outline", 0))
+	_scaled_controls.append({
+		"node": control,
+		"size": base_size,
+		"outline": base_outline
+	})
+
+func _initialize_ui_scaling():
+	_scaled_controls.clear()
+	if settings_panel:
+		if settings_panel.theme:
+			settings_panel.theme = settings_panel.theme.duplicate(true)
+		var nodes = settings_panel.find_children("*", "", true)
+		for node in nodes:
+			if node is Label or node is Button or node is OptionButton or node is CheckBox:
+				_register_scaled_control(node)
+			elif node is LineEdit:
+				_register_scaled_control(node)
+			elif node is SpinBox:
+				_register_scaled_control(node)
+				var le = node.get_line_edit()
+				if le:
+					_register_scaled_control(le)
+	if name_label:
+		_name_label_base_size = NAME_LABEL_BASELINE["size"]
+		_name_label_base_outline = NAME_LABEL_BASELINE["outline"]
+
+func _calculate_ui_scale(total_size: Vector2) -> float:
+	var width_ratio = total_size.x / BASE_VIEWPORT.x
+	var height_ratio = total_size.y / BASE_VIEWPORT.y
+	var scale = min(width_ratio, height_ratio)
+	return clamp(scale, MIN_UI_SCALE, MAX_UI_SCALE)
+
+func _apply_ui_scale(target: float):
+	if abs(target - ui_scale) < 0.01:
+		return
+	ui_scale = target
+	for entry in _scaled_controls:
+		var ctrl: Control = entry.get("node", null)
+		if ctrl == null or !is_instance_valid(ctrl):
+			continue
+		var base_size: float = entry.get("size", 54)
+		var scaled_size = max(int(round(base_size * ui_scale)), 20)
+		ctrl.add_theme_font_size_override("font", scaled_size)
+		var base_outline: float = entry.get("outline", 0)
+		if base_outline > 0:
+			var scaled_outline = max(int(round(base_outline * ui_scale)), 1)
+			ctrl.add_theme_constant_override("outline_size", scaled_outline)
+		else:
+			ctrl.remove_theme_constant_override("outline_size")
+	if name_label:
+		var label_size = _name_label_base_size if _name_label_base_size > 0 else 80
+		label_size = max(int(round(label_size * ui_scale)), 20)
+		name_label.add_theme_font_size_override("font", label_size)
+		var outline_value = max(int(round(_name_label_base_outline * ui_scale)), 2)
+		name_label.add_theme_constant_override("outline_size", outline_value)
+	if right_button:
+		right_button.scale = Vector2(ui_scale, ui_scale)
+	if left_button:
+		left_button.scale = Vector2(ui_scale, ui_scale)
 
 func _populate_palette_modes():
 	palette_mode_option.clear()
@@ -521,8 +644,10 @@ func _on_ToggleOutline_pressed():
 	_redraw()
 
 func _on_ExportButton_pressed():
-	var gd = _prepare_subviewport(true)
+	# Single PNG export: eliminate vertical wobble completely for perfect centering
+	var gd = _prepare_subviewport(true, 0)
 	gd.disable_movement()
+	gd.set_amplitude_multiplier(0.0)
 	gd.set_animation_phase(0.0)
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -544,24 +669,32 @@ func save_image(img, suffix := ""):
 			img.save_png("res://" + name_label.text + suffix + ".png")
 		
 
-func _prepare_subviewport(pixel_perfect):
+func _prepare_subviewport(pixel_perfect, extra_padding_y := 0):
 	for c in $SubViewport.get_children():
 		c.queue_free()
 	var gd = _get_group_drawer(pixel_perfect)
-	gd.position = Vector2.ZERO
-	$SubViewport.size = Vector2i(int(sprite_size.x) + 2, int(sprite_size.y) + 2)
+	# Center vertically by adding symmetric padding to absorb animation offsets
+	gd.position = Vector2(0, int(extra_padding_y))
+	$SubViewport.size = Vector2i(
+		int(sprite_size.x),
+		int(sprite_size.y) + int(extra_padding_y) * 2
+	)
 	$SubViewport.add_child(gd)
+	gd.set_amplitude_multiplier(1.0)
 	return gd
 
 func _on_ExportSpriteSheet_pressed():
 	var frames = clamp(int(round(sprite_sheet_frames)), 2, 16)
-	var gd = _prepare_subviewport(true)
+	# Add vertical padding to prevent top/bottom clipping across animation phases
+	var wobble_padding_y = int(ceil(MAX_ANIM_VERTICAL_AMPLITUDE_PIXELS * SPRITESHEET_WOBBLE_SCALE))
+	var gd = _prepare_subviewport(true, wobble_padding_y)
 	gd.disable_movement()
+	gd.set_amplitude_multiplier(SPRITESHEET_WOBBLE_SCALE)
 	gd.set_animation_phase(0.0)
 	await get_tree().process_frame
 	await get_tree().process_frame
-	var frame_width = int(sprite_size.x) + 2
-	var frame_height = int(sprite_size.y) + 2
+	var frame_width = int(sprite_size.x)
+	var frame_height = int(sprite_size.y) + wobble_padding_y * 2
 	var sheet = Image.create(frame_width * frames, frame_height, false, Image.FORMAT_RGBA8)
 	for i in range(frames):
 		var phase = TWO_PI * float(i) / float(frames)
